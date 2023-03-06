@@ -117,6 +117,7 @@ public final class Util {
         return trace[i + 2];
     }
 
+    // =========================== 所谓的report，其实就是错误输出（控制台）而已 ========================
     static final public void report(String msg, Throwable t) {
         System.err.println(msg);
         System.err.println("Reported exception:");
@@ -126,5 +127,5 @@ public final class Util {
     static final public void report(String msg) {
         System.err.println("SLF4J: " + msg);
     }
-
+    // ============================================================================================
 }

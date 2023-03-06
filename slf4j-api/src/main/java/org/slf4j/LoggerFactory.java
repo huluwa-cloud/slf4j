@@ -59,7 +59,10 @@ import org.slf4j.spi.SLF4JServiceProvider;
  * @author Alexander Dorokhine
  * @author Robert Elliot
  * @author Ceki G&uuml;lc&uuml;
- * 
+ *
+ * LoggerFactory其实就是一个静态工厂。它里面的方法全是静态方法。
+ *
+ *
  */
 public final class LoggerFactory {
 
@@ -98,6 +101,11 @@ public final class LoggerFactory {
 
     static volatile SLF4JServiceProvider PROVIDER;
 
+    /**
+     * 所谓的Provider，其实也就是Slf4j的具体实现。
+     *
+     * 这里也是用了JDK的SPI机制来动态加载实现。
+     */
     private static List<SLF4JServiceProvider> findServiceProviders() {
         ServiceLoader<SLF4JServiceProvider> serviceLoader = ServiceLoader.load(SLF4JServiceProvider.class);
         List<SLF4JServiceProvider> providerList = new ArrayList<>();
@@ -142,17 +150,31 @@ public final class LoggerFactory {
         }
     }
 
+    /**
+     *
+     * 绑定实现，其实就是选出一个Provider给PROVIDER变量赋值
+     *
+     */
     private final static void bind() {
         try {
             List<SLF4JServiceProvider> providersList = findServiceProviders();
+            // 如果classpath中，有多个实现，那么就会控制台打印出错误信息。
+            // 但是程序不会终止！！！
             reportMultipleBindingAmbiguity(providersList);
+
             if (providersList != null && !providersList.isEmpty()) {
+                /**
+                 * 如果有provider，选list的第一个
+                 */
                 PROVIDER = providersList.get(0);
                 // SLF4JServiceProvider.initialize() is intended to be called here and nowhere else.
                 PROVIDER.initialize();
                 INITIALIZATION_STATE = SUCCESSFUL_INITIALIZATION;
                 reportActualBinding(providersList);
             } else {
+                /**
+                 * 如果没有provider，那就打印出，没有provider
+                 */
                 INITIALIZATION_STATE = NOP_FALLBACK_INITIALIZATION;
                 Util.report("No SLF4J providers were found.");
                 Util.report("Defaulting to no-operation (NOP) logger implementation");
@@ -326,7 +348,9 @@ public final class LoggerFactory {
     /**
      * Prints a warning message on the console if multiple bindings were found
      * on the class path. No reporting is done otherwise.
-     * 
+     *
+     * 如果classpath中，有多个实现，那么就会控制台打印出错误信息。
+     * 但是程序不会终止！！！
      */
     private static void reportMultipleBindingAmbiguity(List<SLF4JServiceProvider> providerList) {
         if (isAmbiguousProviderList(providerList)) {
